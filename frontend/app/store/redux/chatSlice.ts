@@ -3,6 +3,7 @@ import type { PayloadAction } from '@reduxjs/toolkit'
 import type { AppDispatch, RootState } from '../index'
 import { Role, type Message, Chat } from "@/types"
 import { sendPromptService, getChatHistoryService, getChatService, deleteChatService } from '@/services/ChatService';
+import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime'
 
 // Define a type for the slice state
 interface ChatState {
@@ -40,7 +41,7 @@ export const chatSlice = createSlice({
             if (state.currentChat?.messages) {
                 state.currentChat.messages.push(action.payload);
             } else {
-                 state.currentChat = { messages: [action.payload] }
+                state.currentChat = { messages: [action.payload] }
             }
         },
         setPrevChatMessages: (state, action: PayloadAction<Chat>) => {
@@ -54,6 +55,9 @@ export const chatSlice = createSlice({
         },
         setDeleteChat: (state, action: PayloadAction<string>) => {
             state.chats = state.chats.filter(chat => chat._id !== action.payload);
+            if (state.currentChat?._id === action.payload) {
+                state.currentChat = {};
+            }
         },
         resetCurrentChat: (state) => {
             state.currentChat = {};
@@ -68,7 +72,7 @@ export const { setLoading, setNewMessage, setChatHistory, setPrevChatMessages, s
 // Other code such as selectors can use the imported `RootState` type
 export const selectLoading = (state: RootState) => state.chat.loading
 export const selectDescription = (state: RootState) => state.chat.description;
-export const selectMessagesHistory = (state: RootState) => state.chat.currentChat?.messages || [];
+export const selectMessagesHistory = (state: RootState) => state.chat.currentChat?.messages;
 export const selectAllChats = (state: RootState) => state.chat.chats;
 
 export default chatSlice.reducer;
@@ -132,10 +136,15 @@ export const getChatHistory = (chatId: string) => async (dispatch: AppDispatch) 
 }
 
 
-export const deleteChat = (chatId: string) => async (dispatch: AppDispatch) => {
+export const deleteChat = (chatId: string, router: AppRouterInstance) => async (dispatch: AppDispatch) => {
     dispatch(setLoading(true))
     const deleted = await deleteChatService(chatId);
 
     dispatch(setLoading(false))
-    deleted && dispatch(setDeleteChat(chatId));
+    if (deleted) {
+        dispatch(setDeleteChat(chatId));
+        // replace so user can't go back
+
+        router.replace("/");
+    }
 }

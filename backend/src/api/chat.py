@@ -142,16 +142,14 @@ def InitChat(req : ChatReq):
             except InvalidId:
                 logger.error(f"Invalid chat_id provided: {chat_id}")
                 
-        elif (user): 
-            title = prompt[:20] 
+        elif (user):
             result = chat_collection.insert_one({
                 "user_id": ObjectId(user_id),
-                "title": title,
+                "title": prompt,
                 "messages": [user_msg, assistant_msg],
                 "created_at": datetime.utcnow(),
             })
             
-            return { "response": bot_answer, "title": title, "chat_id": str(result.inserted_id) }
+            return { "response": bot_answer, "title": prompt, "chat_id": str(result.inserted_id) }
 
-     
     return { "response": bot_answer }

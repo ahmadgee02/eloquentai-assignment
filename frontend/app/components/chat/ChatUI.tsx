@@ -18,14 +18,14 @@ const ChatScreen: FC = () => {
     return (
         <div className="flex flex-col chat-screen">
             <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4 hide-scrollbar">
-                {messages.length === 0 && !loading && (
-                    <div className="flex items-center justify-center mt-12">
+                {(!messages || messages?.length === 0) && !loading && (
+                    <div className="flex items-center justify-center mt-60">
                         <p className="text-xl font-medium text-gray-500">
                             Ready when you are.
                         </p>
                     </div>
                 )}
-                {messages.map((msg, index) => (
+                {messages?.map((msg, index) => (
                     <Messages message={msg} key={index} />
                 ))}
 

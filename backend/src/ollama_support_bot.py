@@ -1,10 +1,11 @@
 from __future__ import annotations
-from dataclasses import dataclass, field
-from typing import List, Dict, Iterable, Optional
+from typing import List, Dict, Optional
 import ollama
 import time
 from .utils.data_classes import PromptConfig, Doc
+from .logger import logging
 
+logger = logging.getLogger(__name__)
 
 class OllamaSupportBot:
     """
@@ -28,25 +29,23 @@ class OllamaSupportBot:
 
         for attempt in range(1, max_retries + 1):
             prompt = self.config.classifier_template.format(query=user_query)
-            print(f"\n[Attempt {attempt}] Classification prompt sent to Ollama:\n{prompt}\n")
+            logger.info(f"\n[Attempt {attempt}] Classification prompt sent to Ollama:\n{prompt}\n")
 
             try:
                 resp = ollama.generate(model=self.model, prompt=prompt)
                 category = resp["response"].strip().lower()  # ensure normalized text
-                print(f"[Attempt {attempt}] Classification response: {category}\n")
 
                 if category != "unknown" and category != "":
                     return category  # valid classification
                 else:
-                    print(f"[Attempt {attempt}] Category was 'unknown' — retrying...\n")
                     time.sleep(wait_seconds)
 
             except Exception as e:
-                print(f"[Attempt {attempt}] Error while classifying: {e}")
+                logger.error(f"[Attempt {attempt}] Error while classifying: {e}")
                 time.sleep(wait_seconds)
 
         # After all retries, return fallback
-        print("All 5 attempts failed to classify. Returning 'unknown'.")
+        logger.info("All 5 attempts failed to classify. Returning 'unknown'.")
         return None
     
     def answer(
@@ -61,56 +60,15 @@ class OllamaSupportBot:
         """
         messages = self._make_messages(user_query, docs)
         
-        print("Messages sent to Ollama:", messages)  # Debug print
+        logger.info("Messages sent to Ollama:", messages)  # Debug print
         
         kwargs: Dict = {}
         if options:
             kwargs["options"] = options
 
         resp = ollama.chat(model=self.model, messages=messages, **kwargs)
-        
-        print("Response received from Ollama:", resp)  # Debug print
-        
+
         return resp["message"]["content"]
-
-    # def answer_json(
-    #     self,
-    #     user_query: str,
-    #     docs: List[Doc],
-    #     *,
-    #     options: Optional[Dict] = None,
-    # ) -> str:
-    #     """
-    #     Non-streaming answer that requests strict JSON output.
-    #     You should pair this with a JSON-only system instruction if you need hard guarantees.
-    #     """
-    #     messages = self._make_messages(user_query, docs)
-    #     kwargs: Dict = {"format": "json"}
-    #     if options:
-    #         kwargs["options"] = options
-
-    #     resp = ollama.chat(model=self.model, messages=messages, **kwargs)
-    #     return resp["message"]["content"]
-
-    # def stream_answer(
-    #     self,
-    #     user_query: str,
-    #     docs: List[Doc],
-    #     *,
-    #     options: Optional[Dict] = None,
-    # ) -> Iterable[str]:
-    #     """
-    #     Streaming answer. Yields text chunks.
-    #     """
-    #     messages = self._make_messages(user_query, docs)
-    #     kwargs: Dict = {"stream": True}
-    #     if options:
-    #         kwargs["options"] = options
-
-    #     for part in ollama.chat(model=self.model, messages=messages, **kwargs):
-    #         chunk = part.get("message", {}).get("content", "")
-    #         if chunk:
-    #             yield chunk
 
     # -----------------------------
     # Internal helpers
@@ -135,7 +93,8 @@ class OllamaSupportBot:
         
         lines: List[str] = []
         for i, d in enumerate(docs, start=1):
-            print("Building context block from docs:", d)  # Debug print
+            logger.info("Building context block from docs:", d)  # Debug print
+            
             lines.append(
                 f"[D{i}]\n"
                 f"id: {d['id']}\n"
@@ -143,46 +102,3 @@ class OllamaSupportBot:
                 f"  {d['text']}\n"
             )
         return "\n".join(lines).strip()
-
-
-# -----------------------------
-# Example usage
-# -----------------------------
-# if __name__ == "__main__":
-    
-    # # Configure the bot
-    # cfg = PromptConfig(
-    #     brand="Acme Cloud",
-    #     tone="friendly, professional",
-    #     max_tokens_hint=180,
-    # )
-    
-    # bot = OllamaSupportBot(config=cfg)
-
-    # # Your reranked top-K docs
-    # topk_docs: List[Doc] = [
-    #     Doc(
-    #         id="42",
-    #         chunk_text="Refunds are available within 30 days for unused subscriptions. "
-    #               "Prorated refunds apply after 7 days. Enterprise plans require account manager approval.",
-    #     ),
-    #     Doc(
-    #         id="77",
-    #         chunk_text="For severity-1 incidents, initial response within 1 hour. "
-    #               "Escalate to on-call SRE after 60 minutes without mitigation.",
-    #     ),
-    # ]
-
-    # user_q = "When The Eiffel Tower was completed?"
-
-    # classify_category = bot.classify_category(user_q)
-    # print(f"\n=== CLASSIFIED CATEGORY ===\n{classify_category}\n")
-    
-    # Non-streaming
-    # answer = bot.answer(
-    #     user_q,
-    #     topk_docs,
-    #     options={"temperature": 0.2, "num_ctx": 8192},
-    # )
-    # print("\n=== ANSWER ===\n")
-    # print(answer)

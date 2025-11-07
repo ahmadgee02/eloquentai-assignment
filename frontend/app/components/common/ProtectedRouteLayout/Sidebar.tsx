@@ -14,11 +14,10 @@ import {
 } from '@heroicons/react/24/outline';
 import { classNames } from "@/utils";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import DeleteModal from "@/components/common/DeleteModal";
 import { selectAllChats, getAllChatHistory, deleteChat } from '@/store/redux/chatSlice';
 import { selectUser } from '@/store/redux/authSlice';
-
 
 const navigation = [
     { name: 'Start New Chat', href: '/', icon: HomeIcon }
@@ -30,6 +29,7 @@ interface Props {
 }
 
 const Sidebar: FC<Props> = (props) => {
+    const router = useRouter();
     const { sidebarOpen, setSidebarOpen } = props;
     const dispatch = useAppDispatch();
     const pathname = usePathname()
@@ -44,7 +44,7 @@ const Sidebar: FC<Props> = (props) => {
 
 
     const onDelete = () => {
-        dispatch(deleteChat(deleteOpen))
+        dispatch(deleteChat(deleteOpen, router))
         setDeleteOpen(null!)
     }
 
@@ -107,14 +107,14 @@ const Sidebar: FC<Props> = (props) => {
                                             {chatHistory.map(({ _id, title }) => (
                                                 <li key={_id}
                                                     className={classNames(
-                                                        pathname === `/chats/${_id}`? 'bg-gray-700': '',
+                                                        pathname === `/chats/${_id}` ? 'bg-gray-700' : '',
                                                         'flex items-center justify-between hover:bg-gray-800 hover:text-white pr-2 rounded cursor-pointer'
                                                     )}>
                                                     <a
                                                         href={`/chats/${_id}`}
                                                         className='group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold text-white'
                                                     >
-                                                        <span className="truncate">{title}</span>
+                                                        <span className="truncate w-50">{title}</span>
                                                     </a>
                                                     <TrashIcon onClick={() => onTrashIconClick(_id || "")} aria-hidden="true" className="ml-auto size-6 shrink-0 flex-end" />
                                                 </li>
@@ -167,7 +167,7 @@ const Sidebar: FC<Props> = (props) => {
                                                 href={`/chats/${_id}`}
                                                 className={'group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold text-white'}
                                             >
-                                                <span className="truncate">{title}</span>
+                                                <span className="truncate w-50">{title}</span>
                                             </a>
                                             <TrashIcon onClick={() => onTrashIconClick(_id || "")} aria-hidden="true" className="ml-auto cursor-pointer size-6 shrink-0 flex-end" />
                                         </li>

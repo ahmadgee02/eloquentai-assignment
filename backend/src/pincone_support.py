@@ -1,18 +1,14 @@
 from typing import List, Literal
 from pinecone import Pinecone
 from dataclasses import dataclass
+from .logger import logging
+from .utils.data_classes import Doc
 
-@dataclass
-class Doc:
-    """
-    Reranked document chunk for RAG grounding.
-    """
-    chunk_text: str
-    id: str = ""
+logger = logging.getLogger(__name__)
 
 class PineconeEmbedder:
     """
-    Minimal wrapper around Pinecone Inference for text embeddings.
+    Class-based Minimal wrapper around Pinecone Inference.
     """
 
     def __init__(
@@ -138,7 +134,7 @@ class PineconeEmbedder:
             parameters={"truncate": "END"}
         )
 
-        print("Reranked results:", reranked)
+        logger.info("Reranked results:", reranked)
         
         documents = [
             {
@@ -149,40 +145,3 @@ class PineconeEmbedder:
         ]
 
         return documents
-
-# # -----------------------------
-# # Example usage
-# # -----------------------------
-# if __name__ == "__main__":
-#     API_KEY = "pcsk_4nmES8_GnZBeXLRFAgqeYvV7bFMvQwgy3hdV6MW9YwZz3G5ZqD1HhuimAvDyLTZ97cPxq2"
-    
-#     embedder = PineconeEmbedder(
-#         api_key=API_KEY, 
-#         namespace="example-namespace", 
-#         index_name="developer-quickstart-py"
-#     )
-
-#     category = "history"
-#     query = "Mention the year and place associated with the completion of the Eiffel Tower?"
-    
-#     query_text = ("Category: " + category + " | Query: " if category else "") + query
-#     print("Searching Pinecone with query:", query_text)
-
-#     query_vector = embedder.embed_query(query_text)
-        
-    
-#     print(f"Query vector length: {len(query_vector)}")
-    
-#     docs = embedder.query_documents(
-#         query_vector=query_vector
-#     )
-    
-#     print(f"Retrieved {docs} documents from Pinecone.")
-    
-#     reranked_docs = embedder.rerank_results(
-#         query_vector=query_text,
-#         documents=docs
-#     )
-    
-#     print(f"Reranked documents: {reranked_docs}")
-    
