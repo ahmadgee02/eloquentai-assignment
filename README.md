@@ -20,6 +20,7 @@ User → Frontend (Next.js) → FastAPI Backend → MongoDB → Pincone → LLM 
 
 #### LLM Integration:
 - Initially used Ollama for local inference and fast prototyping.
+- used Ollama llama3.2:3b model by default a small LLM model instead of large LLM model to reduce the Latency and improve the retrieval quality.
 - Designed the backend to easily switch to serverless LLMs such as Amazon Bedrock or OpenAI APIs by abstracting the inference layer behind a common interface.
 
 

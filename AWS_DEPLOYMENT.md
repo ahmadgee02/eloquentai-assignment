@@ -63,13 +63,12 @@ Use distinct AWS accounts or at least distinct namespaces per env: `dev`, `stagi
 
 **Parameter & Secret layout**
 ```
-/eloquent/{env}/NEXT_PUBLIC_API_URL      
-/eloquent/{env}/LOG_LEVEL         
-/eloquent/{env}/JWT_PRIVATE_KEY           
-/eloquent/{env}/MONGODB_URI           
-/eloquent/{env}/PINECONE_API_KEY          
-/eloquent/{env}/PINECONE_INDEX_NAME         
-/eloquent/{env}/OLLAMA_HOST                 
+/eloquent/{env}/NEXT_PUBLIC_API_URL
+/eloquent/{env}/LOG_LEVEL
+/eloquent/{env}/JWT_PRIVATE_KEY
+/eloquent/{env}/MONGODB_URI
+/eloquent/{env}/PINECONE_API_KEY
+/eloquent/{env}/PINECONE_INDEX_NAME
 /eloquent/{env}/OLLAMA_MODEL
 ```
 

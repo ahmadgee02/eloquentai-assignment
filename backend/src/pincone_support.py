@@ -134,7 +134,7 @@ class PineconeEmbedder:
             parameters={"truncate": "END"}
         )
 
-        logger.info("Reranked results:", reranked)
+        logger.info("Reranked results: %s", reranked)
         
         documents = [
             {

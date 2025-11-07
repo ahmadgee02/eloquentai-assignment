@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import List, Dict, Optional
+from .models.chat import MessageModel
 import ollama
 import time
 from .utils.data_classes import PromptConfig, Doc
@@ -12,7 +13,7 @@ class OllamaSupportBot:
     Class-based wrapper for a customer support RAG flow using Ollama.
     """
 
-    def __init__(self, model: str = "llama3.2:3b"):
+    def __init__(self, model: str):
         self.model = model
         self.config = PromptConfig()
 
@@ -29,7 +30,6 @@ class OllamaSupportBot:
 
         for attempt in range(1, max_retries + 1):
             prompt = self.config.classifier_template.format(query=user_query)
-            logger.info(f"\n[Attempt {attempt}] Classification prompt sent to Ollama:\n{prompt}\n")
 
             try:
                 resp = ollama.generate(model=self.model, prompt=prompt)
@@ -52,15 +52,16 @@ class OllamaSupportBot:
         self,
         user_query: str,
         docs: List[Doc],
+        prev_messages=List[MessageModel],
         *,
         options: Optional[Dict] = None,
     ) -> str:
         """
-        Non-streaming answer. Returns the assistant message text.
+        Non-streaming answer. Returns the system message text.
         """
-        messages = self._make_messages(user_query, docs)
+        messages = self._make_messages(user_query, docs, prev_messages)
         
-        logger.info("Messages sent to Ollama:", messages)  # Debug print
+        logger.info("Messages sent to Ollama: %s", messages)  # Debug print
         
         kwargs: Dict = {}
         if options:
@@ -73,7 +74,7 @@ class OllamaSupportBot:
     # -----------------------------
     # Internal helpers
     # -----------------------------
-    def _make_messages(self, user_query: str, docs: List[Doc]) -> List[Dict[str, str]]:
+    def _make_messages(self, user_query: str, docs: List[Doc], prev_messages: List[MessageModel]=[]) -> List[Dict[str, str]]:
         system = self.config.system_template.format(
             brand=self.config.brand, tone=self.config.tone, max_tokens=self.config.max_tokens_hint
         )
@@ -83,20 +84,26 @@ class OllamaSupportBot:
         user_prompt = self.config.user_template.format(
             user_query=user_query, k=len(docs), context_block=context_block
         )
-        return [
-            {"role": "system", "content": system},
-            {"role": "user", "content": user_prompt},
-        ]
+        
+        messages = [{"role": "system", "content": system}]
+        
+        # Add previous conversation messages
+        for msg in prev_messages:
+            messages.append({"role": msg["role"], "content": msg["text"]})
+            
+        # Add current user query
+        messages.append({"role": "user", "content": user_prompt})
+        
+        return messages
 
     @staticmethod
     def _build_context_block(docs: List[Doc]) -> str:
         
         lines: List[str] = []
-        for i, d in enumerate(docs, start=1):
-            logger.info("Building context block from docs:", d)  # Debug print
+        for _, d in enumerate(docs, start=1):
+            logger.info("Building context block from docs: %s", d)  # Debug print
             
             lines.append(
-                f"[D{i}]\n"
                 f"id: {d['id']}\n"
                 "chunk: |\n"
                 f"  {d['text']}\n"

@@ -15,7 +15,7 @@ from ..database import user_collection, chat_collection
 from ..utils import get_current_user
 from typing import List
 
-router = APIRouter(prefix="/chats", tags=["caht"])
+router = APIRouter(prefix="/chats", tags=["chat"])
 logger = logging.getLogger(__name__)
 
 
@@ -30,7 +30,11 @@ pinecone_client = PineconeEmbedder(
     namespace=NAMESPACE,
 )
 
-bot = OllamaSupportBot()
+OLLAMA_MODEL = settings.OLLAMA_MODEL
+
+bot = OllamaSupportBot(
+    model=OLLAMA_MODEL
+)
 
 def _now_utc_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
@@ -41,11 +45,14 @@ def _now_utc_iso() -> str:
     response_model=List[ChatModel]
 )
 def getChatHistory(current_user: str = Depends(get_current_user)):
+    try:
+        chats = chat_collection.find({ "user_id": current_user["_id"] }).sort("created_at", -1)
+        
+        return chats
+    except Exception as e:
+        logging.error(f"Failed to fetch chats for user {current_user['_id']}: {e}")
+        return []
     
-    chats = chat_collection.find({ "user_id": current_user["_id"] }).sort("created_at", -1)
-    
-    return chats
-
 @router.get(
     "/{chat_id}",
     response_description="Get a single chat",
@@ -64,7 +71,6 @@ def getChat(chat_id: str):
     return chat
 
 
-
 @router.delete(
     "/{chat_id}",
     response_description="Delete a single chat"
@@ -80,41 +86,53 @@ def deleteChat(chat_id: str):
 
     return {"message": "Chat deleted"}
 
+
+#  Can be improved to fetch user_id via JWT token
 @router.post(
     "/",
     response_description="Initiate chat",
-    # response_model=str
 )
 def InitChat(req : ChatReq):
+    logger.info(f"Init Chat Request Recieved: {req}")
+
     prompt: str = req.prompt
     user_id: Optional[str] = getattr(req, "user_id", None)
     chat_id: Optional[str] = getattr(req, "chat_id", None)
     
     category = bot.classify_category(prompt)
     
+    # create query text for vector search
     query_text = ("Category: " + category + " | Query: " if category else "") + prompt
-    # print("Searching Pinecone with query:", query_text)
 
     query_vector = pinecone_client.embed_query(query_text)
     
+    # fetch relevent docs from pincone with cosine similarity
     docs = pinecone_client.query_documents(
         query_vector=query_vector
     )
     
-    # print("pulled records from the data", docs)
-
+    # rerank the relevent docs with ssimilarity with prompt
     reranked_docs = pinecone_client.rerank_results(
         query_vector=prompt,
         documents=docs
     )
+    logger.info(f"Final Doc selected for LLm context: {reranked_docs}")
     
+    messages= []
+    
+    # append old conversation if there is any
+    if chat_id:
+        chat = getChat(chat_id)
+        messages = chat["messages"]
+        
     bot_answer = bot.answer(
         user_query=prompt,
-        docs=reranked_docs
+        docs=reranked_docs,
+        prev_messages=messages
     )
     
     if user_id is not None:
-        print(f"Storing chat message for user_id: {user_id}")
+        logger.info(f"Storing chat message for user_id: {user_id}")
         
         user = user_collection.find_one({"_id": ObjectId(user_id) })
 
@@ -124,8 +142,8 @@ def InitChat(req : ChatReq):
             "created_at": _now_utc_iso(),
         }
     
-        assistant_msg = {
-            "role": "assistant",
+        system_msg = {
+            "role": "system",
             "text": bot_answer,
             "created_at": _now_utc_iso(),
         }
@@ -135,7 +153,7 @@ def InitChat(req : ChatReq):
                 chat_obj_id = ObjectId(chat_id)
                 chat_collection.update_one(
                     {"_id": chat_obj_id, "user_id": ObjectId(user_id)},
-                    {"$push": {"messages": {"$each": [user_msg, assistant_msg]}}}
+                    {"$push": {"messages": {"$each": [user_msg, system_msg]}}}
                 )
                 
                 return { "response": bot_answer }
@@ -146,7 +164,7 @@ def InitChat(req : ChatReq):
             result = chat_collection.insert_one({
                 "user_id": ObjectId(user_id),
                 "title": prompt,
-                "messages": [user_msg, assistant_msg],
+                "messages": [user_msg, system_msg],
                 "created_at": datetime.utcnow(),
             })
             

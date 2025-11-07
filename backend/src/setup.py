@@ -12,7 +12,8 @@ from .config import (
     OpenAISettings,
     EnvironmentOption,
     EnvironmentSettings,
-    PineconeSettings
+    PineconeSettings,
+    OllamaSettings
 )
 
 # -------------- application --------------
@@ -23,6 +24,7 @@ def create_application(
         | OpenAISettings
         | EnvironmentSettings
         | PineconeSettings
+        | OllamaSettings
     ),
     **kwargs: Any,
 ) -> FastAPI:

@@ -23,6 +23,8 @@ class PineconeSettings(BaseSettings):
     PINECONE_INDEX_NAME: str = config("PINECONE_INDEX_NAME", default="")
     PINECONE_NAME_SPACE: str = config("PINECONE_NAME_SPACE", default="")
 
+class OllamaSettings(BaseSettings):
+    OLLAMA_MODEL: str = config("OLLAMA_MODEL", default="llama3.2:3b")
 
 
 class DatabaseSettings(BaseSettings):
@@ -42,7 +44,8 @@ class Settings(
     CryptSettings,
     EnvironmentSettings,
     OpenAISettings,
-    PineconeSettings
+    PineconeSettings,
+    OllamaSettings
 ):
     pass
 
