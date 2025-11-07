@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --bg-elevated-secondary: #181818;
+  --bg-primary: #212121;
+  --text-primary: #fff;
+  --tw-prose-th-borders: var(--tw-prose-invert-th-borders);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.sidebar {
+  background: var(--bg-elevated-secondary);
+} 
+
+
+.chatbox {
+  background-color: #303030;
+}
+
+.list {
+  background-color: var(--bg-primary);
+  bottom: 100px
+}
+
+.chat {
+  text-align: justify;
+  background: var(--bg-elevated-secondary);
+} 
+
+.chat-screen {
+  height: 92vh;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none !important;
+}

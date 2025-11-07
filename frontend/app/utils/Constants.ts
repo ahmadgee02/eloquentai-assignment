@@ -1,0 +1,1 @@
+export const local_storage_web_key = "ELOQUENT:token";
