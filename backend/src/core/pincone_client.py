@@ -1,12 +1,12 @@
 from typing import List, Literal
 from pinecone import Pinecone
 from dataclasses import dataclass
-from .logger import logging
-from .utils.data_classes import Doc
+from ..logger import logging
+from ..utils.data_classes import Doc
 
 logger = logging.getLogger(__name__)
 
-class PineconeEmbedder:
+class PineconeClient:
     """
     Class-based Minimal wrapper around Pinecone Inference.
     """

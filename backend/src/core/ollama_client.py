@@ -1,14 +1,14 @@
 from __future__ import annotations
 from typing import List, Dict, Optional
-from .models.chat import MessageModel
+from ..models.chat import MessageModel
 import ollama
 import time
-from .utils.data_classes import PromptConfig, Doc
-from .logger import logging
+from ..utils.data_classes import PromptConfig, Doc
+from ..logger import logging
 
 logger = logging.getLogger(__name__)
 
-class OllamaSupportBot:
+class OllamaClient:
     """
     Class-based wrapper for a customer support RAG flow using Ollama.
     """
@@ -101,7 +101,7 @@ class OllamaSupportBot:
         
         lines: List[str] = []
         for _, d in enumerate(docs, start=1):
-            logger.info("Building context block from docs: %s", d)  # Debug print
+            # logger.info("Building context block from docs: %s", d)  # Debug print
             
             lines.append(
                 f"id: {d['id']}\n"

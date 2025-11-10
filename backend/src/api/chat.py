@@ -1,19 +1,18 @@
-from fastapi import APIRouter, Depends, Query, HTTPException
-from typing import Optional, Dict, Any
+from fastapi import APIRouter, Depends, HTTPException
 from bson.objectid import ObjectId
 from bson.errors import InvalidId
 from datetime import datetime, timezone
 from ..logger import logging
 
-from ..ollama_support_bot import OllamaSupportBot
-from ..pincone_support import PineconeEmbedder
+# from ..core.ollama_client import OllamaClient
+from ..core.langchain_client import LangchainClient
+from ..core.pincone_client import PineconeClient
 from ..config import settings
-from ..utils.data_classes import PromptConfig
 from ..schemas.chat import ChatReq
 from ..models.chat import ChatModel
 from ..database import user_collection, chat_collection
 from ..utils import get_current_user
-from typing import List
+from typing import List, Optional
 
 router = APIRouter(prefix="/chats", tags=["chat"])
 logger = logging.getLogger(__name__)
@@ -24,7 +23,7 @@ API_KEY = settings.PINECONE_API_KEY
 INDEX_NAME = settings.PINECONE_INDEX_NAME
 NAMESPACE = settings.PINECONE_NAME_SPACE
 
-pinecone_client = PineconeEmbedder(
+pinecone_client = PineconeClient(
     api_key=API_KEY,
     index_name=INDEX_NAME,
     namespace=NAMESPACE,
@@ -32,7 +31,7 @@ pinecone_client = PineconeEmbedder(
 
 OLLAMA_MODEL = settings.OLLAMA_MODEL
 
-bot = OllamaSupportBot(
+chat_bot = LangchainClient(
     model=OLLAMA_MODEL
 )
 
@@ -99,7 +98,7 @@ def InitChat(req : ChatReq):
     user_id: Optional[str] = getattr(req, "user_id", None)
     chat_id: Optional[str] = getattr(req, "chat_id", None)
     
-    category = bot.classify_category(prompt)
+    category = chat_bot.classify_category(prompt)
     
     # create query text for vector search
     query_text = ("Category: " + category + " | Query: " if category else "") + prompt
@@ -125,7 +124,7 @@ def InitChat(req : ChatReq):
         chat = getChat(chat_id)
         messages = chat["messages"]
         
-    bot_answer = bot.answer(
+    bot_answer = chat_bot.answer(
         user_query=prompt,
         docs=reranked_docs,
         prev_messages=messages

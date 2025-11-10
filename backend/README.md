@@ -13,17 +13,35 @@ https://github.com/ahmadgee02/eloquentai-assignment.git
 cd eloquentai-assignment/backend
 ```
 
+# 2. Create and Run a virtual environment
+```bash
+python -m venv .venv
+```
+
+### Activate it
+On Windows:
+```bash
+.venv\Scripts\activate
+```
+
+On macOS/Linux:
+```bash
+source .venv/bin/activate
+```
+
+
 2. **Install the Runtime Dependencies**
 ```bash
 pip install -r requirements.txt
 ```
+
+
 3. **Run FastAPI server**
 ```bash
 uv run uvicorn src.main:app --reload --reload-dir=./ --reload-include='*.py'
 ```
 
 ## ⚙️ Environment Variables (.env)
-
 Rename the .env.sample file to .env and config env variables.
 
 ```ini
