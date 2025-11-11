@@ -36,19 +36,42 @@ pip install -r requirements.txt
 ```
 
 
-3. **Run FastAPI server**
+3. **Running Ollama Models Locally**
+##### 1. Install Ollama
+
+### macOS / Linux
+```bash
+curl -fsSL https://ollama.com/install.sh | sh
+```
+Windows
+
+Download and install Ollama from https://ollama.com/download
+Open the Ollama app once to initialize the background service.
+
+##### 2. Verify Installation
+```bash
+ollama --version
+ollama list
+```
+
+##### 3. Pull a Model (default model used for this assignment)
+```bash
+ollama pull llama3.2:3b
+```
+
+4. **Run FastAPI server**
 ```bash
 uv run uvicorn src.main:app --reload --reload-dir=./ --reload-include='*.py'
 ```
 
-## ⚙️ Environment Variables (.env)
+5. **Environment Variables (.env)**
 Rename the .env.sample file to .env and config env variables.
 
 ```ini
 [Paths]
 DATABASE_URL=""
 SECRET_KEY=""
-ACCESS_TOKEN_EXPIRE_MINUTES=300
+ACCESS_TOKEN_EXPIRE_MINUTES=
 
 PINECONE_API_KEY=""
 PINECONE_INDEX_NAME=""
@@ -56,7 +79,8 @@ PINECONE_NAME_SPACE=""
 OLLAMA_MODEL=""
 ```
 
-## 🗂️ Project Structure
+
+6. **Project Structure**
 
 ```bash
 backend/
@@ -65,7 +89,12 @@ backend/
 │   ├── api/
 │   │   ├── __init__.py
 │   │   ├── auth.py
-│   │   ├── chat.py
+│   │   └── chat.py
+│   ├── core/
+│   │   ├── __init__.py
+│   │   ├── langchain_client.py
+│   │   ├── ollama_client.py
+│   │   └── pincone_client.py
 │   ├── models
 │   │   ├── __init__.py
 │   │   ├── chat.py
@@ -78,14 +107,11 @@ backend/
 │   │   ├── data_classes.py
 │   │   ├── jwt_bearer.py
 │   │   ├── jwt_handler.py
-│   │   └── socket_connection.py
 │   ├── __init__.py
 │   ├── config.py
 │   ├── database.py
 │   ├── logger.py
 │   ├── main.py
-│   ├── ollama_support_bot.py
-│   ├── pincone_support.py
 │   ├── setup.py
 ├── .env
 ├── .env.sample

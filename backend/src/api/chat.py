@@ -41,7 +41,8 @@ def _now_utc_iso() -> str:
 @router.get(
     "/history",
     response_description="Get All chats",
-    response_model=List[ChatModel]
+    response_model=List[ChatModel],
+    dependencies=[Depends(get_current_user)]
 )
 def getChatHistory(current_user: str = Depends(get_current_user)):
     try:
@@ -72,7 +73,8 @@ def getChat(chat_id: str):
 
 @router.delete(
     "/{chat_id}",
-    response_description="Delete a single chat"
+    response_description="Delete a single chat",
+    dependencies=[Depends(get_current_user)]
 )
 def deleteChat(chat_id: str):
     try:
