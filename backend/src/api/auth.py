@@ -82,19 +82,3 @@ def register(
     )
     
     return {"access_token": token, "token_type": "bearer"}
-
-
-@router.get(
-    "/{user_id}",
-    response_description="Get a single user",
-)
-def getUser(user_id: str):
-    print("Fetching user:", user_id)
-     
-    user = user_collection.find_one({"_id": ObjectId(user_id) })
-    print("Fetched user:", user)
-    
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    return user
